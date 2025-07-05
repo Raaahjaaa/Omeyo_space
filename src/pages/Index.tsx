@@ -7,9 +7,10 @@ import { MessageCircle, Users, Search, Bell } from "lucide-react";
 import MoodSelector from "@/components/MoodSelector";
 import ProfileSetup from "@/components/ProfileSetup";
 import ChatInterface from "@/components/ChatInterface";
+import DualChatInterface from "@/components/DualChatInterface";
 
 const Index = () => {
-  const [currentStep, setCurrentStep] = useState<'landing' | 'mood' | 'profile' | 'matching' | 'chat'>('landing');
+  const [currentStep, setCurrentStep] = useState<'landing' | 'mood' | 'profile' | 'matching' | 'chat' | 'dual-chat'>('landing');
   const [selectedMood, setSelectedMood] = useState<string>('');
   const [userProfile, setUserProfile] = useState<any>(null);
 
@@ -63,6 +64,10 @@ const Index = () => {
     return <ChatInterface userProfile={userProfile} selectedMood={selectedMood} />;
   }
 
+  if (currentStep === 'dual-chat') {
+    return <DualChatInterface userProfile={userProfile} selectedMood={selectedMood} onBack={() => setCurrentStep('landing')} />;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       {/* Hero Section */}
@@ -84,14 +89,25 @@ const Index = () => {
             Experience genuine human connection in a safe, anonymous environment.
           </p>
           
-          <Button 
-            onClick={handleGetStarted}
-            size="lg" 
-            className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-8 py-6 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-          >
-            Start Chatting
-            <MessageCircle className="ml-2 h-5 w-5" />
-          </Button>
+          <div className="flex gap-4 flex-col sm:flex-row">
+            <Button 
+              onClick={handleGetStarted}
+              size="lg" 
+              className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-8 py-6 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+            >
+              Start Chatting
+              <MessageCircle className="ml-2 h-5 w-5" />
+            </Button>
+            <Button 
+              onClick={() => setCurrentStep('dual-chat')}
+              size="lg" 
+              variant="outline"
+              className="border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-50 px-8 py-6 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+            >
+              Try Dual Chat
+              <Users className="ml-2 h-5 w-5" />
+            </Button>
+          </div>
         </div>
 
         {/* Features Grid */}

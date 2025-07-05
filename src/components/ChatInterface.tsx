@@ -5,8 +5,10 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { MessageCircle, Send, Flag, UserX, MoreVertical } from "lucide-react";
+import { MessageCircle, Send, Flag, UserX, MoreVertical, AlertCircle } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { chatService, ChatMessage } from "@/services/chatService";
+import { useToast } from "@/hooks/use-toast";
 
 interface ChatInterfaceProps {
   userProfile: any;
@@ -21,17 +23,13 @@ interface Message {
 }
 
 const ChatInterface = ({ userProfile, selectedMood }: ChatInterfaceProps) => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      text: "Hey there! I'm also looking for someone to chat with. How's your day going?",
-      sender: 'stranger',
-      timestamp: new Date()
-    }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
-  const [isConnected, setIsConnected] = useState(true);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -41,36 +39,75 @@ const ChatInterface = ({ userProfile, selectedMood }: ChatInterfaceProps) => {
     scrollToBottom();
   }, [messages]);
 
-  const sendMessage = () => {
-    if (newMessage.trim()) {
-      const message: Message = {
-        id: Date.now().toString(),
-        text: newMessage,
-        sender: 'user',
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, message]);
-      setNewMessage('');
-
-      // Simulate stranger response
-      setTimeout(() => {
-        const responses = [
-          "That's interesting! Tell me more about that.",
-          "I can relate to that feeling.",
-          "Thanks for sharing that with me.",
-          "That sounds really cool!",
-          "I've had similar experiences too."
-        ];
-        const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+  // Initialize chat when component mounts
+  useEffect(() => {
+    const initializeChat = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
         
-        const strangerMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          text: randomResponse,
-          sender: 'stranger',
+        // Start a chat session
+        const user1 = userProfile?.name || 'User1';
+        const user2 = 'Anonymous Stranger';
+        await chatService.startChat(user1, user2);
+        
+        // Get existing messages
+        const apiMessages = await chatService.getMessages();
+        const formattedMessages: Message[] = apiMessages.map((msg, index) => ({
+          id: index.toString(),
+          text: msg.text,
+          sender: msg.sender === user1 ? 'user' : 'stranger',
+          timestamp: new Date(msg.timestamp)
+        }));
+        
+        setMessages(formattedMessages);
+        setIsConnected(true);
+        
+        toast({
+          title: "Chat Connected!",
+          description: "You're now connected with someone. Start chatting!",
+        });
+      } catch (err) {
+        setError('Failed to connect to chat. Please try again.');
+        toast({
+          title: "Connection Failed",
+          description: "Unable to connect to chat server. Please check your connection.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeChat();
+  }, [userProfile, toast]);
+
+  const sendMessage = async () => {
+    if (newMessage.trim() && isConnected) {
+      try {
+        const user1 = userProfile?.name || 'User1';
+        const messageText = newMessage; // Store the message text before clearing
+        
+        // Add message to UI immediately
+        const message: Message = {
+          id: Date.now().toString(),
+          text: messageText,
+          sender: 'user',
           timestamp: new Date()
         };
-        setMessages(prev => [...prev, strangerMessage]);
-      }, 1000 + Math.random() * 2000);
+        setMessages(prev => [...prev, message]);
+        setNewMessage('');
+
+        // Send message to API
+        await chatService.sendMessage(user1, messageText);
+        
+      } catch (err) {
+        toast({
+          title: "Message Failed",
+          description: "Failed to send message. Please try again.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -104,6 +141,40 @@ const ChatInterface = ({ userProfile, selectedMood }: ChatInterfaceProps) => {
     };
     return colors[mood as keyof typeof colors] || 'bg-gray-100 text-gray-700';
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md text-center">
+          <CardContent className="p-8">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-indigo-600 mx-auto mb-6"></div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Connecting to Chat...</h2>
+            <p className="text-gray-600 mb-6">Setting up your conversation with someone new.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md text-center">
+          <CardContent className="p-8">
+            <div className="text-4xl mb-4">⚠️</div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Connection Failed</h2>
+            <p className="text-gray-600 mb-6">{error}</p>
+            <Button 
+              onClick={() => window.location.reload()}
+              className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white"
+            >
+              Try Again
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (!isConnected) {
     return (
