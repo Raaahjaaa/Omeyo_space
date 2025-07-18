@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { MessageCircle, Users, Search, Bell } from "lucide-react";
 import MoodSelector from "@/components/MoodSelector";
 import ProfileSetup from "@/components/ProfileSetup";
+import ProfileSetupHeartbreak from "@/components/ProfileSetupHeartbreak";
+import ProfileSetupDepression from "@/components/ProfileSetupDepression";
 import ChatInterface from "@/components/ChatInterface";
 import DualChatInterface from "@/components/DualChatInterface";
 
@@ -37,7 +39,13 @@ const Index = () => {
   }
 
   if (currentStep === 'profile') {
-    return <ProfileSetup selectedMood={selectedMood} onComplete={handleProfileComplete} />;
+    if (selectedMood === 'heartbreak') {
+      return <ProfileSetupHeartbreak onComplete={handleProfileComplete} onBack={() => setCurrentStep('mood')} />;
+    } else if (selectedMood === 'depression') {
+      return <ProfileSetupDepression onComplete={handleProfileComplete} onBack={() => setCurrentStep('mood')} />;
+    } else {
+      return <ProfileSetup selectedMood={selectedMood} onComplete={handleProfileComplete} onBack={() => setCurrentStep('mood')} />;
+    }
   }
 
   if (currentStep === 'matching') {
@@ -81,7 +89,7 @@ const Index = () => {
           </div>
           
           <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-6">
-            Anonymous Chat
+            Omeyo Space
           </h1>
           
           <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8 leading-relaxed">

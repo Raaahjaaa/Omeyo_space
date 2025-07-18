@@ -39,6 +39,32 @@ const ChatInterface = ({ userProfile, selectedMood }: ChatInterfaceProps) => {
     scrollToBottom();
   }, [messages]);
 
+  // Add auto-refresh polling for messages every 3 seconds
+  useEffect(() => {
+    if (!isConnected) return;
+    const interval = setInterval(() => {
+      loadMessages();
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [isConnected]);
+
+  // Function to load messages from the backend
+  const loadMessages = async () => {
+    if (!isConnected) return;
+    try {
+      const apiMessages = await chatService.getMessages();
+      const formattedMessages = apiMessages.map((msg, index) => ({
+        id: index.toString(),
+        text: msg.text,
+        sender: msg.sender === (userProfile?.name || 'User1') ? 'user' : 'stranger',
+        timestamp: new Date(msg.timestamp)
+      }));
+      setMessages(formattedMessages);
+    } catch (error) {
+      // Optionally handle error
+    }
+  };
+
   // Initialize chat when component mounts
   useEffect(() => {
     const initializeChat = async () => {

@@ -9,15 +9,23 @@ import { Label } from "@/components/ui/label";
 interface ProfileSetupProps {
   selectedMood: string;
   onComplete: (profile: any) => void;
+  onBack?: () => void;
 }
 
-const ProfileSetup = ({ selectedMood, onComplete }: ProfileSetupProps) => {
+const supportMoods = [
+  { id: 'heartbreak', label: 'Heart break' },
+  { id: 'depression', label: 'Depression talk' },
+  { id: 'anxiety', label: 'Anxiety support' },
+  { id: 'loneliness', label: 'Loneliness' },
+  { id: 'motivation', label: 'Motivation' }
+];
+
+const ProfileSetup = ({ selectedMood, onComplete, onBack }: ProfileSetupProps) => {
   const [ageRange, setAgeRange] = useState<string>('');
   const [interests, setInterests] = useState<string[]>([]);
   const [location, setLocation] = useState<string>('');
 
   const ageRanges = ['18-24', '25-34', '35-44', '45-54', '55+'];
-  
   const interestOptions = [
     'Technology', 'Music', 'Movies', 'Books', 'Sports', 'Travel',
     'Food', 'Art', 'Gaming', 'Science', 'Philosophy', 'Business',
@@ -50,11 +58,17 @@ const ProfileSetup = ({ selectedMood, onComplete }: ProfileSetupProps) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
       <div className="w-full max-w-2xl">
+        <div className="flex items-center mb-4">
+          {onBack && (
+            <Button variant="ghost" size="sm" onClick={onBack} className="mr-2">
+              ← Back
+            </Button>
+          )}
+        </div>
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-800 mb-4">Tell us a bit about yourself</h1>
           <p className="text-lg text-gray-600">This helps us find better conversation matches</p>
         </div>
-
         <Card className="bg-white/80 backdrop-blur-sm border-indigo-200 mb-6">
           <CardHeader>
             <CardTitle className="text-xl text-gray-800">Age Range</CardTitle>
@@ -74,7 +88,6 @@ const ProfileSetup = ({ selectedMood, onComplete }: ProfileSetupProps) => {
             </div>
           </CardContent>
         </Card>
-
         <Card className="bg-white/80 backdrop-blur-sm border-indigo-200 mb-6">
           <CardHeader>
             <CardTitle className="text-xl text-gray-800">Interests</CardTitle>
@@ -102,7 +115,6 @@ const ProfileSetup = ({ selectedMood, onComplete }: ProfileSetupProps) => {
             </p>
           </CardContent>
         </Card>
-
         <Card className="bg-white/80 backdrop-blur-sm border-indigo-200 mb-6">
           <CardHeader>
             <CardTitle className="text-xl text-gray-800">General Location (Optional)</CardTitle>
@@ -120,7 +132,6 @@ const ProfileSetup = ({ selectedMood, onComplete }: ProfileSetupProps) => {
             </div>
           </CardContent>
         </Card>
-
         <div className="text-center">
           <Button
             onClick={handleComplete}
@@ -131,7 +142,6 @@ const ProfileSetup = ({ selectedMood, onComplete }: ProfileSetupProps) => {
             Find My Match
           </Button>
         </div>
-
         <div className="text-center mt-6">
           <p className="text-sm text-gray-500">
             Your information is kept completely anonymous and secure
